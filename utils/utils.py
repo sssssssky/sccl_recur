@@ -1,12 +1,13 @@
 from os import truncate
 import random
 import torch
+import argparse
 import numpy as np
 import transformers
 from sentence_transformers import SentenceTransformer
 
 
-def set_global_random_seed(args):
+def set_global_random_seed(args: argparse.ArgumentParser):
     """set global seed
 
     Args:
@@ -24,7 +25,8 @@ def set_global_random_seed(args):
     torch.backends.cudnn.benchmark = True
 
 
-def get_model_name(args):
+def get_model_name(args: argparse.ArgumentParser):
+    
     MODEL_CLASS = {
         "distil": 'distilbert-base-nli-stsb-mean-tokens', 
         "robertabase": 'roberta-base-nli-stsb-mean-tokens',
@@ -34,10 +36,12 @@ def get_model_name(args):
         "bertlarge": 'bert-large-nli-stsb-mean-tokens',
         "bertbase": 'bert-base-nli-stsb-mean-tokens',
     }
+    print(MODEL_CLASS[args.model])
+
     return MODEL_CLASS[args.model]
 
 
-def char2id(tokenizer, batch, args):
+def char2id(tokenizer, batch, args: argparse.ArgumentParser):
 
     text, text1, text2 = batch['text'], batch['text1'], batch['text2']
     label =batch['label'] if args.gpu == 'cpu' else batch['label'].cuda()
@@ -49,10 +53,3 @@ def char2id(tokenizer, batch, args):
             padding = 'longest', truncating = True)
         feat.append(ids)
     return ids,label
-
-
-def id2embeding(model, ids):
-
-
-    return None
-

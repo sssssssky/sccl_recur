@@ -19,20 +19,23 @@ class AugmentSamples(Dataset):
 
     """
 
-    def __init__(self, text: List, text1: List, text2: List, label: List):
+    def __init__(self, text: List, text1: List, text2: List, label: List, N_time: int):
         self.text = text
         self.text1 = text1
         self.text2 = text2
         self.label = label
+        self.length = len(text)
+        self.ntime = N_time
 
     def __len__(self):
-        return len(self.text)
+        return len(self.text) * self.ntime
 
     def __getitem__(self, index):
-        return {"text": self.text[index], "text1": self.text1[index], "text2": self.text2[index], "label": self.label[index]}
+        return {"text": self.text[index % self.length], "text1": self.text1[index % self.length], 
+                "text2": self.text2[index % self.length], "label": self.label[index % self.length]}
 
 
-def get_dataloader(args):
+def get_dataloader(args, ntimes = 1):
     """ get train dataloader
 
     Args:
@@ -45,10 +48,11 @@ def get_dataloader(args):
     train_data = pd.read_csv(args.train_data_path)
     test, test1, test2, label = train_data['text'].values.tolist(), train_data['text1'].values.tolist(), \
         train_data['text2'].values.tolist(), train_data['label'].values.tolist()
-    train_dataset = AugmentSamples(test, test1, test2, label)
+    train_dataset = AugmentSamples(test, test1, test2, label, ntimes)
     train_dataloader = DataLoader(train_dataset, shuffle = True, batch_size = args.batch_size, drop_last = False)
     
     return  train_dataloader
+    
     
     
     
