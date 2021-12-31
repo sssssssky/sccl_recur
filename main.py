@@ -1,34 +1,36 @@
+import torch
 import torch.nn as nn
 import numpy as np
 import argparse
 from typing import List
-from tqdm.auto import tqdm
 from sklearn.cluster import KMeans
 from tensorboardX import SummaryWriter
 from sklearn.metrics.cluster import normalized_mutual_info_score
 
-from dataloader import *
+from dataloader import get_dataloader
 from utils.utils import *
-from utils.clustering_utils import *
+from utils.clustering_utils import get_cluster_prob
 from evalution import evalution
 from model import sccl
 from loss_function import instance_CL_loss
 
 
-
-
 def eval_step(sccl_model: sccl, args: argparse.ArgumentParser, writer, j: int):
     print("start eval......")
     sccl_model.eval()
-
     eval_dataloader = get_dataloader(args)
     with torch.no_grad():
-        for i,batch in enumerate(eval_dataloader):
+        for i, batch in enumerate(eval_dataloader):
             ids, y_true = sccl_model.char2id(batch)
             embedding_text = sccl_model.id2embedding(ids[0])
-            min_distance, cluster_prob = get_cluster_prob(embedding_text, sccl_model.cluster_center, args)
+            min_distance, cluster_prob = \
+                get_cluster_prob(
+                                    embedding_text,
+                                    sccl_model.cluster_center,
+                                    args
+                                 )
 
-            if i!=0:
+            if i != 0:
                 all_embedding_text = np.concatenate((all_embedding_text, embedding_text.cpu().numpy()), axis = 0)
                 all_label = np.concatenate((all_label, y_true))
                 all_pre = np.concatenate((all_pre,cluster_prob.max(1)[1].cpu().numpy()))
@@ -38,9 +40,7 @@ def eval_step(sccl_model: sccl, args: argparse.ArgumentParser, writer, j: int):
                 all_label = y_true
                 all_pre = cluster_prob.max(1)[1].cpu().numpy()
                 all_min_distance = min_distance.cpu().numpy()
-
-
-    
+  
     kmeans = KMeans(n_clusters=args.num_classes, random_state=args.seed)
     kmeans.fit(all_embedding_text)
     pred_labels = kmeans.labels_.astype(np.int)
@@ -142,7 +142,7 @@ def get_argparser(argv: List):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_data_path', type = str, default = '../input/text-after-augment/searchsnippets_wordnet_augment.csv', help = 'the path of train data')
-    parser.add_argument('--batch_size', type = int, default = 400, help ='batch size')
+    parser.add_argument('--batch_size', type = int,default = 400, help = 'batch size')
     parser.add_argument('--gpu', type = str, default = 'gpu', help = 'cpu or gpu')
     parser.add_argument('--seed', type = int, default = 0, help = 'the global seed')
     parser.add_argument('--model', type = str ,default = 'distil' ,help = 'the pre_train language model' )

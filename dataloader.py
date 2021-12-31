@@ -1,8 +1,6 @@
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd
-from typing import Dict, List
-import os
-
+from typing import List
 
 
 class AugmentSamples(Dataset):
@@ -35,24 +33,21 @@ class AugmentSamples(Dataset):
                 "text2": self.text2[index % self.length], "label": self.label[index % self.length]}
 
 
-def get_dataloader(args, ntimes = 1):
+def get_dataloader(args, ntimes=1):
     """ get train dataloader
 
     Args:
         args: An argparse class
-
+        ntimes: the max epoch of training(if eval 1  if train  10000,)
     Returns:
         dataloader
-    
+
     """
     train_data = pd.read_csv(args.train_data_path)
-    test, test1, test2, label = train_data['text'].values.tolist(), train_data['text1'].values.tolist(), \
-        train_data['text2'].values.tolist(), train_data['label'].values.tolist()
-    train_dataset = AugmentSamples(test, test1, test2, label, ntimes)
-    train_dataloader = DataLoader(train_dataset, shuffle = True, batch_size = args.batch_size, drop_last = False)
-    
-    return  train_dataloader
-    
-    
-    
-    
+    text = train_data['text'].values.tolist()
+    text1 = train_data['text1'].values.tolist()
+    text2 = train_data['text2'].values.tolist() 
+    label = train_data['label'].values.tolist()
+    train_dataset = AugmentSamples(text, text1, text2, label, ntimes)
+    train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=args.batch_size, drop_last=False)
+    return train_dataloader
