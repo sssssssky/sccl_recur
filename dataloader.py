@@ -34,7 +34,7 @@ class AugmentSamples(Dataset):
                 "text2": self.text2[index % self.length], "label": self.label[index % self.length]}
 
 
-def get_dataloader(args: argparse.ArgumentParser, ntimes=1) ->DataLoader:
+def get_dataloader(args: argparse.ArgumentParser, ntimes=1) -> DataLoader:
     """ get train dataloader
 
     Args:
