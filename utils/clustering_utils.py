@@ -1,12 +1,12 @@
 import torch
 import numpy as np
 import argparse
-from ../model import sccl
+
 from torch.utils.data import DataLoader
 from sklearn.cluster import KMeans
 
 
-def get_kmean_center(model: sccl, dataloader: DataLoader, args: argparse.ArgumentParser):
+def get_kmean_center(model, dataloader: DataLoader, args: argparse.ArgumentParser):
     """get the label and cluster center of kmeans
 
     Args:

@@ -3,10 +3,11 @@ import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 from sentence_transformers import SentenceTransformer
+
 from utils.clustering_utils import get_kmean_center
 from utils.utils import get_model_name
-
 from dataloader import get_dataloader
 from utils.clustering_utils import get_cluster_prob, get_auxiliary_distribution
 
