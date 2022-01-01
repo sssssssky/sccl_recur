@@ -1,4 +1,4 @@
-train_data
+/train_data
 __pycache__
-.ipynb_checkpoints
-runs
+.ipynb_checkpoints/
+/runs
