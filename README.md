@@ -26,7 +26,7 @@ numpy==1.19.5
 
 ```python
 python main.py\
-	   --train_name googlenewsTS_contextual\
+       --train_name googlenewsTS_contextual\
        --train_data_path $path\
        --num_classes 152\
        --batch_size 400\
