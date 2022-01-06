@@ -34,6 +34,19 @@ class sccl(nn.Module):
 
         self.cluster_center = nn.Parameter(initial_cluster_center)
 
+        
+    def reset_cluster_center(self, cluster_center):
+        """reset cluster center
+        
+        Arsg:
+            cluster_center: the new clusters centers from kmean
+        """
+        new_cluster_center = torch.tensor(
+            cluster_center,dtype = torch.float , requires_grad = True
+        )
+        self.cluster_center = nn.Parameter(new_cluster_center)
+
+        
     def char2id(self, batch: dict) -> Tuple[torch.tensor, np.ndarray]:
         """Convert text to id
         

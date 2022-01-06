@@ -18,7 +18,7 @@ from loss_function import instance_CL_loss
 
 
 def eval_step(sccl_model: sccl, args: argparse.ArgumentParser, writer: SummaryWriter, j: int):
-    print("start eval......")
+    print("Step: {}   start eval......".format(j))
     sccl_model.eval()
     eval_dataloader = get_dataloader(args)
     with torch.no_grad():
@@ -80,12 +80,13 @@ def eval_step(sccl_model: sccl, args: argparse.ArgumentParser, writer: SummaryWr
     
     writer.add_scalars('density',{'model_density':model_density,'kmean_density':cluster_density},j)
     writer.add_scalars('centers_distance',{'model_centers_distance': cluster_centers_distance,'kmean_centers_distance': model_center_distance},j)
-    sccl_model.train()
+    
+    return kmeans.cluster_centers_
 
 
 def train(args: argparse.ArgumentParser):
     set_global_random_seed(args)
-    writer = SummaryWriter(comment='train_result_visual', filename_suffix="train_result_visual")
+    writer = SummaryWriter(comment= args.train_name, filename_suffix = args.train_name)
 
     sccl_model = sccl(args).cuda()
     sccl_model.train()
@@ -120,8 +121,13 @@ def train(args: argparse.ArgumentParser):
         writer.add_scalar('loss/Instance-CL_loss',constrast.item() , j)
         writer.add_scalar('loss/clustering_loss',clustering.item() , j)
         if (j % args.eval_step ==  0) & (j != 0):
-            eval_step(sccl_model, args, writer, j)
-        if(j>3000):
+            print('\n')
+            new_cluster_center = eval_step(sccl_model, args, writer, j)
+            if args.is_change_centers:
+                sccl_model.reset_cluster_center(new_cluster_center)
+                sccl_model.cuda()
+            sccl_model.train()
+        if j > args.max_step:
             break
 
     writer.close()
@@ -138,19 +144,22 @@ def get_argparser(argv: List) ->argparse.ArgumentParser:
 
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--train_data_path', type = str, default = 'train_data/searchsnippets_wordnet_augment.csv', help = 'the path of train data')
-    parser.add_argument('--batch_size', type = int,default = 400, help = 'batch size')
+    parser.add_argument('--train_name', type = str, default = 'googlenewsTS_contextual_change_center(400)')
+    parser.add_argument('--train_data_path', type = str, default = 'train_data/googlenewsTS_contextual_augment.csv', help = 'the path of train data')
+    parser.add_argument('--batch_size', type = int,default = 350, help = 'batch size')
     parser.add_argument('--gpu', type = str, default = 'gpu', help = 'cpu or gpu')
     parser.add_argument('--seed', type = int, default = 0, help = 'the global seed')
     parser.add_argument('--model', type = str ,default = 'distil' ,help = 'the pre_train language model' )
     parser.add_argument('--max_len', type = int, default = 32, help = 'the max lenght of sentence')
-    parser.add_argument('--num_classes', type = int, default= 8 ,help = 'the class num of news or text')
+    parser.add_argument('--num_classes', type = int, default= 152 ,help = 'the class num of news or text')
     parser.add_argument('--tempreture', type = float, default = 0.5, help = 'the tempreture of  instance_CL_loss')
     parser.add_argument('--alpha', type = int, default = 1, help = 'the degree of freedom of the Students t-distribution')
     parser.add_argument('--lr', type = float, default = 1e-5, help = "lr")
     parser.add_argument('--lr_scale', type = float, default = 100.0, help = "lr_scale")
-    parser.add_argument('--eval_step', type = int, default = 100, help = 'every n step to eval' )
+    parser.add_argument('--eval_step', type = int, default = 400, help = 'every n step to eval' )
+    parser.add_argument('--max_step', type = int, default = 3000, help = 'the max step to train' )
     parser.add_argument('--is_use_consistancy', type = bool, default = False, help = 'is use consistancy' )
+    parser.add_argument('--is_change_centers', type = bool, default = True, help = 'is change_centers' )
     args = parser.parse_args(argv)
     return args
 
